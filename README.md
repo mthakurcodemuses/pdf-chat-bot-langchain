@@ -26,7 +26,7 @@ flask --app app.web init-db
 
 ### Run the app in docker container (specifically for celery windows issue)
 
-You'll need <b>Docker Desktop</b> latest version because I'm using docker compose watch for auto-reloading the changes 
+You'll need <b>Docker Desktop</b> latest version because we'll be using docker compose watch for auto-reloading the changes 
 
 Docker file is present in the root directory of the project
 1. The file is configured to start the flask project on container startup.
