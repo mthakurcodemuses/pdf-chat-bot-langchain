@@ -1,0 +1,22 @@
+version: "3"
+
+services:
+  pdf-chat-bot-app:
+    image: pdf-chat-bot-app:latest
+    container_name: pdf-chat-bot-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    develop:
+      watch:
+        - action: sync
+          path: ./app
+          target: /pdf-chat-bot-app/app
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    container_name: pdf-chat-bot-redis
