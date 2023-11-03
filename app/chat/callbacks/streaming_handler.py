@@ -39,8 +39,8 @@ class StreamingHandler(BaseCallbackHandler):
 
     def on_llm_error(
             self,
-            run_id,
             error,
+            run_id,
             **kwargs):
         print("Run Id inside on_llm_end: ", run_id)
         if run_id in self.streaming_run_ids:

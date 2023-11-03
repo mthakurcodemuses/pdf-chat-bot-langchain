@@ -1,36 +1,24 @@
+from app.chat.redis.redis_client import redis_client
+
+
 def score_conversation(
-    conversation_id: str, score: float, llm: str, retriever: str, memory: str
+        conversation_id: str, score: float, llm: str, retriever: str, memory: str
 ) -> None:
-    """
-    This function interfaces with langfuse to assign a score to a conversation, specified by its ID.
-    It creates a new langfuse score utilizing the provided llm, retriever, and memory components.
-    The details are encapsulated in JSON format and submitted along with the conversation_id and the score.
+    print("Generating the scores using OpenAI {}", llm)
+    score = min(max(score, 0), 1)
 
-    :param conversation_id: The unique identifier for the conversation to be scored.
-    :param score: The score assigned to the conversation.
-    :param llm: The Language Model component information.
-    :param retriever: The Retriever component information.
-    :param memory: The Memory component information.
+    redis_client.hincrby("llm_score_values", llm, score)
+    redis_client.hincrby("retriever_score_values", retriever, score)
+    redis_client.hincrby("memory_score_values", memory, score)
 
-    Example Usage:
-
-    score_conversation('abc123', 0.75, 'llm_info', 'retriever_info', 'memory_info')
-    """
-    print("Generating the scores using OpenAI")
+    redis_client.hincrby("llm_score_counts", llm, 1)
+    redis_client.hincrby("retriever_score_counts", retriever, 1)
+    redis_client.hincrby("memory_score_counts", memory, 1)
 
 
 def get_scores():
     """
-    Retrieves and organizes scores from the langfuse client for different component types and names.
-    The scores are categorized and aggregated in a nested dictionary format where the outer key represents
-    the component type and the inner key represents the component name, with each score listed in an array.
-
-    The function accesses the langfuse client's score endpoint to obtain scores.
-    If the score name cannot be parsed into JSON, it is skipped.
-
-    :return: A dictionary organized by component type and name, containing arrays of scores.
-
-    Example:
+        Example:
 
         {
             'llm': {
@@ -42,4 +30,19 @@ def get_scores():
         }
     """
 
-    pass
+    aggregate_scores = {"llm": {}, "retriever": {}, "memory": {}}
+    for component_type in aggregate_scores.keys():
+
+        score_values = redis_client.hgetall(f"{component_type}_score_values")
+        score_counts = redis_client.hgetall(f"{component_type}_score_counts")
+
+        component_names = score_values.keys()
+
+        for component_name in component_names:
+            score = int(score_values.get(component_name, 1))
+            count = int(score_counts.get(component_name, 1))
+
+            average_score = score/count
+            aggregate_scores[component_type][component_name] = [average_score]
+
+    return aggregate_scores
